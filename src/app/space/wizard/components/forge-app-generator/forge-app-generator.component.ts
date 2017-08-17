@@ -1,9 +1,14 @@
-import { ViewEncapsulation, Component, Inject, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
+import {
+  ViewEncapsulation, Component, Inject, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild,
+  Host
+} from '@angular/core';
 //
 import { ILoggerDelegate, LoggerFactory } from '../../common/logger';
 import { INotifyPropertyChanged } from '../../core/component';
 import { IWorkflow, WorkflowTransitionAction } from '../../models/workflow';
 import { Fabric8AppGeneratorClient } from '../../services/fabric8-app-generator.client';
+import {WizardComponent, WizardConfig, WizardEvent, WizardStepConfig} from 'patternfly-ng';
+import {SpaceWizardComponent} from '../../space-wizard.component';
 
 @Component({
   host: {
@@ -20,22 +25,29 @@ import { Fabric8AppGeneratorClient } from '../../services/fabric8-app-generator.
   ]
 })
 export class ForgeAppGeneratorComponent implements OnInit, OnDestroy, OnChanges {
+  @ViewChild('wizard') wizard: WizardComponent;
+  // Wizard
+  wizardConfig: WizardConfig;
+  spaceWizard: SpaceWizardComponent;
 
   // keep track of the number of instances
   static instanceCount: number = 1;
 
-  @Input() title: string = 'Forge Wizard';
+  @Input() title: string = 'Forge Wizard'; // default title
   @Input() workflowStepName: string = '';
   @Input() forgeCommandName: string = 'none';
   @Input() workflow: IWorkflow;
+  stepConfig: WizardStepConfig;
 
   constructor(
     public appGenerator: Fabric8AppGeneratorClient,
-    loggerFactory: LoggerFactory) {
+    loggerFactory: LoggerFactory,
+    @Host() spaceWizard: SpaceWizardComponent) {
     let logger = loggerFactory.createLoggerDelegate(this.constructor.name, ForgeAppGeneratorComponent.instanceCount++);
     if ( logger ) {
       this.log = logger;
     }
+    this.spaceWizard = spaceWizard;
     this.log(`New instance ...`);
   }
 
@@ -47,6 +59,25 @@ export class ForgeAppGeneratorComponent implements OnInit, OnDestroy, OnChanges 
     this.log(`ngOnInit ...`);
     this.appGenerator.commandName = this.forgeCommandName;
     this.appGenerator.workflow = this.workflow;
+
+    ///// Wizard
+    this.wizardConfig = {
+      title: this.title,
+      // sidebarStyleClass: 'example-wizard-sidebar',
+      // stepStyleClass: 'example-wizard-step'
+    } as WizardConfig;
+    this.stepConfig = {
+      id: 'step1',
+      priority: 0,
+      title: 'First Step'
+    } as WizardStepConfig;
+    ///// Wizard
+  }
+
+  nextClicked($event: WizardEvent): void {
+    if ($event.step.config.id === 'step3b') { // TODO test final step
+      this.spaceWizard.finish();
+    }
   }
 
   ngOnDestroy() {
