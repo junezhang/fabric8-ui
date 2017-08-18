@@ -1,13 +1,10 @@
 import {
   ViewEncapsulation, Component, Inject, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild,
   Host, Output, EventEmitter} from '@angular/core';
-//
 import { ILoggerDelegate, LoggerFactory } from '../../common/logger';
-import { INotifyPropertyChanged } from '../../core/component';
-import { IWorkflow, WorkflowTransitionAction } from '../../models/workflow';
 import { Fabric8AppGeneratorClient } from '../../services/fabric8-app-generator.client';
-import {WizardComponent, WizardConfig, WizardEvent, WizardStepConfig} from 'patternfly-ng';
-import {SpaceWizardComponent} from '../../space-wizard.component';
+import { WizardComponent, WizardConfig, WizardEvent, WizardStepConfig } from 'patternfly-ng';
+import { SpaceWizardComponent } from '../../space-wizard.component';
 
 @Component({
   host: {
@@ -23,7 +20,7 @@ import {SpaceWizardComponent} from '../../space-wizard.component';
     Fabric8AppGeneratorClient.factoryProvider
   ]
 })
-export class ForgeAppGeneratorComponent implements OnInit, OnDestroy, OnChanges {
+export class ForgeAppGeneratorComponent implements OnInit, OnDestroy {
   @ViewChild('wizard') wizard: WizardComponent;
   // Wizard
   wizardConfig: WizardConfig;
@@ -34,9 +31,7 @@ export class ForgeAppGeneratorComponent implements OnInit, OnDestroy, OnChanges 
   static instanceCount: number = 1;
 
   @Input() title: string = 'Forge Wizard'; // default title
-  @Input() workflowStepName: string = '';
   @Input() forgeCommandName: string = 'none';
-  @Input() workflow: IWorkflow;
   @Output('onCancel') onCancel = new EventEmitter();
 
   constructor(
@@ -58,13 +53,12 @@ export class ForgeAppGeneratorComponent implements OnInit, OnDestroy, OnChanges 
   ngOnInit() {
     this.log(`ngOnInit ...`);
     this.appGenerator.commandName = this.forgeCommandName;
-    this.appGenerator.workflow = this.workflow;
-
+    // init Forge flow
+    this.appGenerator.begin();
     ///// Wizard
     this.wizardConfig = {
       title: this.title,
-      // sidebarStyleClass: 'example-wizard-sidebar',
-      // stepStyleClass: 'example-wizard-step'
+      hidePreviousButton: true // TODO wait for merged and released https://github.com/patternfly/patternfly-ng/pull/112
     } as WizardConfig;
     this.stepConfig = {
       id: 'step1',
@@ -84,73 +78,11 @@ export class ForgeAppGeneratorComponent implements OnInit, OnDestroy, OnChanges 
     this.log(`ngOnDestroy ...`);
   }
 
-  /** handle all changes to @Input properties */
-  ngOnChanges(changes: SimpleChanges) {
-    for ( let propName in changes ) {
-      if ( changes.hasOwnProperty(propName) ) {
-        this.log(`ngOnChanges ... ${propName}`);
-        switch ( propName.toLowerCase() ) {
-          case 'workflow': {
-            let change: INotifyPropertyChanged<IWorkflow> = <any>changes[ propName ];
-            this.onWorkflowPropertyChanged(change);
-            break;
-          }
-          default : {
-            break;
-          }
-        }
-      }
-    }
-  }
   cancel() {
     console.log('cancel from ForgeAppGenerator');
     this.spaceWizard.finish();
     this.onCancel.emit({}); // TODO send forge wizard step
   }
-
-  private onWorkflowPropertyChanged(change?: INotifyPropertyChanged<IWorkflow>) {
-    if ( change ) {
-      if ( change.currentValue !== change.previousValue ) {
-        this.log(`The workflow property changed value ...`);
-        let current: IWorkflow = change.currentValue;
-        this.appGenerator.workflow = current;
-        this.subscribeToIncomingWorkflowTransitions(current);
-        this.subscribeToOutgoingWorkflowTransitions(current);
-      }
-    }
-  }
-  private subscribeToOutgoingWorkflowTransitions(workflow: IWorkflow) {
-    if ( !workflow ) {
-      return;
-    }
-    workflow.transitions.filter(transition => transition.isTransitioningFrom(this.workflowStepName))
-    .subscribe((transition) => {
-      switch ( transition.action ) {
-        case WorkflowTransitionAction.NEXT: {
-          // moving from this point in the workflow as the result of a nextStep transition
-          break;
-        }
-        case WorkflowTransitionAction.GO: {
-          // moving from this point in the workflow as the result of a goToStep transition
-          break;
-        }
-        default: {
-          break;
-        }
-      }
-    });
-  }
-
-  private subscribeToIncomingWorkflowTransitions(workflow: IWorkflow) {
-    if ( !workflow ) {
-      return;
-    }
-    workflow.transitions.filter(transition => transition.isTransitioningTo(this.workflowStepName))
-    .subscribe((transition) => {
-      this.appGenerator.begin();
-    });
-  }
-
   /** logger delegate delegates logging to a logger */
   private log: ILoggerDelegate = () => {};
 

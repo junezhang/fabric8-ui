@@ -1,10 +1,7 @@
-
 <pfng-wizard #wizard
              [config]="wizardConfig"
              (onCancel)="cancel()"
-             (onNext)="appGenerator.gotoNextStep()"
-             >
-
+             (onNext)="appGenerator.gotoNextStep()">
   <pfng-wizard-step [config]="stepConfig">
     <form class="form-horizontal">
       <div [class.has-danger]="!field.display.valid" class="form-group" *ngFor="let field of appGenerator.fields">
@@ -34,9 +31,6 @@
       </div>
     </form>
   </pfng-wizard-step>
-
-
-
 </pfng-wizard>
 
 
