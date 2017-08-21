@@ -1,8 +1,55 @@
 <pfng-wizard #wizard
              [config]="wizardConfig"
              (onCancel)="cancel()"
-             (onNext)="appGenerator.gotoNextStep()">
-  <pfng-wizard-step [config]="stepConfig">
+             (onNext)="nextClicked($event)"
+             (onStepChange)="stepChanged($event)">
+
+  <app-generator-step-view [class.hide]="appGenerator.hasProcessingMessage||appGenerator.hasSuccessMessage" [state]="appGenerator.state"  ></app-generator-step-view>
+
+  <!-- TODO wizard: reuse patternfly spinner-->
+  <section  [class.hide]="!appGenerator.hasProcessingMessage" class="app-generator-message app-generator-message-processing">
+    <div class="message-title-container">
+      <div class="message-title">
+        <span class="message-title-text" >{{appGenerator.processingMessage.title||''}}</span>
+      </div>
+    </div>
+    <div class="message-body-container">
+      <div class="message-body">
+        <div class="busy-indicator">
+          <div class="spinner spinner-lg"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section [class.hide]="!appGenerator.hasErrorMessage" class="app-generator-message app-generator-message-error">
+    <div class="message-title-container">
+      <div class="message-title">
+        <span class="message-title-icon fa-2x pficon pficon-error-circle-o"></span>
+        <span class="message-title-icon-label" >Errorfgfgfgf!</span>
+        <span class="message-title-text" >{{appGenerator.errorMessage.title||''}}</span>
+      </div>
+    </div>
+    <div class="message-body-container">
+      <div [innerHTML]="appGenerator.errorMessage.body" class="message-body"></div>
+    </div>
+  </section>
+
+  <section [class.hide]="!appGenerator.hasSuccessMessage" class="app-generator-message app-generator-message-success">
+    <div class="message-title-container">
+      <div class="message-title">
+        <span class="message-title-icon fa-2x pficon pficon-ok"></span>
+        <span class="message-title-icon-label" >Success!</span>
+        <span class="message-title-text">{{appGenerator.successMessage.title||''}}</span>
+      </div>
+    </div>
+    <div class="message-body-container">
+      <div [innerHTML]="appGenerator.successMessage.body" class="form-horizontal message-body">
+      </div>
+    </div>
+  </section>
+
+  <pfng-wizard-step [class.hide]="appGenerator.hasErrorMessage||appGenerator.hasSuccessMessage||appGenerator.hasProcessingMessage" >
     <form class="form-horizontal">
       <div [class.has-danger]="!field.display.valid" class="form-group" *ngFor="let field of appGenerator.fields">
         <label title="{{field.display.label}}" [class.required]="field.display.required===true" for="{{field.name}}" *ngIf="(field.display.showLabel!==false && field.display.visible!==false)||field.display.showVerticalLabel === true"

@@ -3,7 +3,7 @@ import {
   Host, Output, EventEmitter} from '@angular/core';
 import { ILoggerDelegate, LoggerFactory } from '../../common/logger';
 import { Fabric8AppGeneratorClient } from '../../services/fabric8-app-generator.client';
-import { WizardComponent, WizardConfig, WizardEvent, WizardStepConfig } from 'patternfly-ng';
+import { WizardComponent, WizardConfig, WizardEvent } from 'patternfly-ng';
 import { SpaceWizardComponent } from '../../space-wizard.component';
 
 @Component({
@@ -25,7 +25,6 @@ export class ForgeAppGeneratorComponent implements OnInit, OnDestroy {
   // Wizard
   wizardConfig: WizardConfig;
   spaceWizard: SpaceWizardComponent;
-  stepConfig: WizardStepConfig;
 
   // keep track of the number of instances
   static instanceCount: number = 1;
@@ -58,19 +57,41 @@ export class ForgeAppGeneratorComponent implements OnInit, OnDestroy {
     ///// Wizard
     this.wizardConfig = {
       title: this.title,
-      hidePreviousButton: true // TODO wait for merged and released https://github.com/patternfly/patternfly-ng/pull/112
+      hidePreviousButton: true, // TODO wizard: wait for merged and released https://github.com/patternfly/patternfly-ng/pull/112
+      hideIndicators: true, // TODO wizard: remove custom AppGeneratorStepViewComponent to reuse patterfly wizard step
     } as WizardConfig;
-    this.stepConfig = {
-      id: 'step1',
-      priority: 0,
-      title: 'First Step'
-    } as WizardStepConfig;
-    ///// Wizard
   }
 
+  stepChanged($event: WizardEvent): void {
+    // this.onStepChange.emit({
+    //   index: index,
+    //   step: step
+    // } as WizardEvent);
+
+    // TODO wizard: check if next enabled
+    // if (this.appGenerator.state.currentStep != 0 && this.appGenerator.state.canMoveToNextStep == false) {
+    //    this.wizard.steps[$event.index].nextEnabled = false;
+    // }
+  }
   nextClicked($event: WizardEvent): void {
-    if ($event.step.config.id === 'step3b') { // TODO test final step
-      this.spaceWizard.finish();
+    // Check last step
+    if (this.appGenerator.state.currentStep == 2) { //this.appGenerator.state.steps.length - 1 /*last*/) { // TODO wizard: test with https://issues.jboss.org/browse/FORGE-2757
+      this.wizard.config.nextTitle = "Finish";
+      this.appGenerator.gotoNextStep();
+    } else if (this.appGenerator.state.currentStep == 3) { // TODO wizard: be able to have both next and finish button in patternfly wizard
+      if (this.wizard.config.nextTitle == "Finish") {
+        this.appGenerator.finish();
+        this.wizard.config.nextTitle = "Ok"
+      } else { // once finish is done, go back to this step for acknoledgement
+        if (this.appGenerator.hasErrorMessage) {
+          this.appGenerator.acknowledgeErrorMessage();
+        } else {
+          this.appGenerator.acknowledgeSuccessMessage();
+        }
+        this.cancel(); // close modal
+        }
+    } else {
+      this.appGenerator.gotoNextStep();
     }
   }
 
