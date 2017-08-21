@@ -1,9 +1,9 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
 import { Router } from '@angular/router';
 import { ILoggerDelegate, LoggerFactory } from './common/logger';
-import { IModalHost } from './models/modal-host';
 import { IWorkflow, WorkflowFactory } from './models/workflow';
 import { AppGeneratorConfiguratorService } from './services/app-generator.service';
+import { WorkflowStep } from "app/space/wizard/models/workflow-step";
 
 @Component({
   selector: 'space-wizard',
@@ -14,8 +14,8 @@ export class SpaceWizardComponent implements OnInit {
 
   static instanceCount: number = 1;
 
-  @Input() host: IModalHost;
-
+  @Input() stepIndex: string;
+  @Output('onCancel') onCancel = new EventEmitter();
   /*
    * facilitates specifying a specific starting step when opening the host dialog
    */
@@ -101,23 +101,17 @@ export class SpaceWizardComponent implements OnInit {
   }
 
   finish() {
-    this.log(`finish ...`);
+    this.log(`finish (in finish)...`);
     // navigate to the users space
     this.router.navigate([
       this.configurator.currentSpace.relationalData.creator.attributes.username,
       this.configurator.currentSpace.attributes.name
     ]);
-    if (this.host) {
-      this.host.close();
-    }
   }
 
   cancel() {
-    this.log(`cancel...`);
-    // just close the host dialog
-    if (this.host) {
-      this.host.close();
-    }
+    this.log(`cancel from space-wizard...`);
+    this.onCancel.emit({});
   }
 
   /**
@@ -126,39 +120,11 @@ export class SpaceWizardComponent implements OnInit {
    * cast to IModalHost interface
    */
   configureComponentHost() {
-
-    this.host.closeOnEscape = true;
-    this.host.closeOnOutsideClick = false;
-
     let me = this;
-
-    /**
-     * Configure the modal dialog open and close intercept handlers.
-     */
-    let originalOpenHandler = this.host.open;
-    this.host.open = function (...args) {
-      me.log(`Opening wizard modal dialog ...`, args);
-      me.reset();
-      if ( args.length > 0 && typeof args[0] === 'string' ) {
-        let step = args[0];
-        me.workflow.gotoStep(step);
-      }
-      /**
-       * note: 'this' in this context is not me ( i.e component)
-       * ... but an instance of Modal.
-       * That is why  => is not being used here
-       */
-      return originalOpenHandler.apply(this, args);
-    };
-    let originalCloseHandler = this.host.close;
-    this.host.close = function (...args) {
-      me.log(`Closing wizard modal dialog ...`);
-      /**
-       * note: 'this' is not me ... but an instance of Modal.
-       * That is why  => is not being used here
-       */
-      return originalCloseHandler.apply(this, args);
-    };
+    me.reset();
+    if (this.stepIndex) {
+      me.workflow.gotoStep(this.stepIndex);
+    }
   }
 
   /**

@@ -5,11 +5,15 @@
   <space-configurator class="wizard-step" [class.active]="workflow.isStepActive({name:configurator.workflowSteps.spaceConfigurator})" [workflow]="workflow" > </space-configurator>
 
 
-  <forge-app-generator title="Start from quickstart applications" class="wizard-step" [class.active]="workflow.isStepActive({name:configurator.workflowSteps.forgeQuickStart})"
+  <forge-app-generator title="Start from quickstart applications" class="wizard-step"
+    (onCancel)="cancel()"
+    [class.active]="workflow.isStepActive({name:configurator.workflowSteps.forgeQuickStart})"
     forgeCommandName="{{configurator.forgeCommands.forgeQuickStart}}" workflowStepName="{{configurator.workflowSteps.forgeQuickStart}}" [workflow]="workflow">
   </forge-app-generator>
 
-  <forge-app-generator title="Start from import repositories" class="wizard-step" [class.active]="workflow.isStepActive({name:configurator.workflowSteps.forgeImportGit})"
+  <forge-app-generator title="Start from import repositories" class="wizard-step"
+    (onCancel)="cancel()"
+    [class.active]="workflow.isStepActive({name:configurator.workflowSteps.forgeImportGit})"
     forgeCommandName="{{configurator.forgeCommands.forgeImportGit}}" workflowStepName="{{configurator.workflowSteps.forgeImportGit}}" [workflow]="workflow">
   </forge-app-generator>
 

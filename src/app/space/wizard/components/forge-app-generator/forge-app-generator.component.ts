@@ -1,7 +1,6 @@
 import {
   ViewEncapsulation, Component, Inject, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild,
-  Host
-} from '@angular/core';
+  Host, Output, EventEmitter} from '@angular/core';
 //
 import { ILoggerDelegate, LoggerFactory } from '../../common/logger';
 import { INotifyPropertyChanged } from '../../core/component';
@@ -29,6 +28,7 @@ export class ForgeAppGeneratorComponent implements OnInit, OnDestroy, OnChanges 
   // Wizard
   wizardConfig: WizardConfig;
   spaceWizard: SpaceWizardComponent;
+  stepConfig: WizardStepConfig;
 
   // keep track of the number of instances
   static instanceCount: number = 1;
@@ -37,7 +37,7 @@ export class ForgeAppGeneratorComponent implements OnInit, OnDestroy, OnChanges 
   @Input() workflowStepName: string = '';
   @Input() forgeCommandName: string = 'none';
   @Input() workflow: IWorkflow;
-  stepConfig: WizardStepConfig;
+  @Output('onCancel') onCancel = new EventEmitter();
 
   constructor(
     public appGenerator: Fabric8AppGeneratorClient,
@@ -101,6 +101,11 @@ export class ForgeAppGeneratorComponent implements OnInit, OnDestroy, OnChanges 
         }
       }
     }
+  }
+  cancel() {
+    console.log('cancel from ForgeAppGenerator');
+    this.spaceWizard.finish();
+    this.onCancel.emit({}); // TODO send forge wizard step
   }
 
   private onWorkflowPropertyChanged(change?: INotifyPropertyChanged<IWorkflow>) {

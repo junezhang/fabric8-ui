@@ -53,6 +53,7 @@ import { WizardModule} from 'patternfly-ng';
   ],
   exports: [
     SpaceWizardComponent,
+    SpaceConfiguratorComponent,
     UniqueSpaceNameValidatorDirective
   ],
   providers: [
