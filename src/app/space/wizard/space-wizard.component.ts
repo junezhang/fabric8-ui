@@ -11,7 +11,7 @@ import { WizardComponent, WizardConfig, WizardEvent, WizardStepConfig } from 'pa
   templateUrl: './space-wizard.component.html',
   styleUrls: ['./space-wizard.component.less']
 })
-export class SpaceWizardComponent implements OnInit, OnAfterViewInit {
+export class SpaceWizardComponent implements OnInit, AfterViewInit {
  @ViewChild('wizard') wizard: WizardComponent;
 
   static instanceCount: number = 1;
